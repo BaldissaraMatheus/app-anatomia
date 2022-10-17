@@ -15,6 +15,18 @@ import Footer from '../../components/Footer';
 import Header from '../../components/Header';
 import Layout, { GradientBackground } from '../../components/Layout';
 import SEO from '../../components/SEO';
+import Image from 'next/image';
+
+const ResponsiveImage = (props) => (
+  <Image
+    alt={props.alt}
+    layout="responsive"
+    width={10}
+    height={10}
+    className="w-max h-auto"
+    {...props}
+  />
+);
 
 // Custom components/renderers to pass to MDX.
 // Since the MDX files aren't loaded by webpack, they have no knowledge of how
@@ -26,6 +38,7 @@ const components = {
   // useful for conditionally loading components for certain routes.
   // See the notes in README.md for more details.
   Head,
+  // img: ResponsiveImage,
 };
 
 export default function PostPage({
@@ -85,15 +98,6 @@ export default function PostPage({
           )}
         </div>
       </article>
-      <Footer copyrightText={globalData.footerText} />
-      <GradientBackground
-        variant="large"
-        className="absolute -top-32 opacity-30 dark:opacity-50"
-      />
-      <GradientBackground
-        variant="small"
-        className="absolute bottom-0 opacity-20 dark:opacity-10"
-      />
     </Layout>
   );
 }
