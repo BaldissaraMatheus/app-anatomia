@@ -8,11 +8,25 @@ import remarkGfm from 'remark-gfm';
 // POSTS_PATH is useful when you want to get the path to a specific file
 export const POSTS_PATH = path.join(process.cwd(), 'posts');
 
-// postFilePaths is the list of all mdx files inside the POSTS_PATH directory
-export const postFilePaths = fs
-  .readdirSync(POSTS_PATH)
-  // Only include md(x) files
-  .filter((path) => /\.mdx?$/.test(path));
+function flatten(lists) {
+  return lists.reduce((a, b) => a.concat(b), []);
+}
+
+function getDirectories(srcpath) {
+  return fs.readdirSync(srcpath)
+    .map(file => path.join(srcpath, file))
+    .filter(path => fs.statSync(path).isDirectory());
+}
+
+function getDirectoriesRecursive(srcpath) {
+  return [srcpath, ...flatten(getDirectories(srcpath).map(getDirectoriesRecursive))];
+}
+
+function getMdxFiles(directories) {
+  return fs
+    .readdirSync(directories)
+    .filter((path) => /\.mdx?$/.test(path));
+}
 
 export const sortPostsByDate = (posts) => {
   return posts.sort((a, b) => {
@@ -23,8 +37,16 @@ export const sortPostsByDate = (posts) => {
 };
 
 export const getPosts = () => {
-  let posts = postFilePaths.map((filePath) => {
-    const source = fs.readFileSync(path.join(POSTS_PATH, filePath));
+  const directories = getDirectoriesRecursive(POSTS_PATH);
+  const files = directories
+    .map(directory => getMdxFiles(directory).map(file => ({
+      name: file,
+      directory,
+    })))
+    .flat();
+  let posts = files.map((file) => {
+    const source = fs.readFileSync(path.join(file.directory, file.name));
+    const filePath = `${file.directory.substring(POSTS_PATH.length)}/${file.name}`.substring(1)
     const { content, data } = matter(source);
 
     return {
@@ -40,7 +62,7 @@ export const getPosts = () => {
 };
 
 export const getPostBySlug = async (slug) => {
-  const postFilePath = path.join(POSTS_PATH, `${slug}.mdx`);
+  const postFilePath = path.join(POSTS_PATH, `${slug}.mdx`).replace(',', '/');
   const source = fs.readFileSync(postFilePath);
 
   const { content, data } = matter(source);

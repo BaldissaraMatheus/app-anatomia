@@ -3,7 +3,7 @@ import {
   getNextPostBySlug,
   getPostBySlug,
   getPreviousPostBySlug,
-  postFilePaths,
+  getPosts,
 } from '../../utils/mdx-utils';
 
 import { MDXRemote } from 'next-mdx-remote';
@@ -11,22 +11,9 @@ import Head from 'next/head';
 import Link from 'next/link';
 import ArrowIcon from '../../components/ArrowIcon';
 import CustomLink from '../../components/CustomLink';
-import Footer from '../../components/Footer';
 import Header from '../../components/Header';
-import Layout, { GradientBackground } from '../../components/Layout';
+import Layout from '../../components/Layout';
 import SEO from '../../components/SEO';
-import Image from 'next/image';
-
-const ResponsiveImage = (props) => (
-  <Image
-    alt={props.alt}
-    layout="responsive"
-    width={10}
-    height={10}
-    className="w-max h-auto"
-    {...props}
-  />
-);
 
 // Custom components/renderers to pass to MDX.
 // Since the MDX files aren't loaded by webpack, they have no knowledge of how
@@ -54,7 +41,7 @@ export default function PostPage({
         title={`${frontMatter.title} - ${globalData.name}`}
         description={frontMatter.description}
       />
-      <Header name={globalData.name} />
+      <Header name={globalData.name} navbarItems={globalData.navbarItems} />
       <article className="px-6 md:px-0">
         <header>
           <h1 className="text-3xl md:text-5xl dark:text-white text-center mb-12">
@@ -120,12 +107,14 @@ export const getStaticProps = async ({ params }) => {
 };
 
 export const getStaticPaths = async () => {
-  const paths = postFilePaths
+  const paths = getPosts()
     // Remove file extensions for page paths
-    .map((path) => path.replace(/\.mdx?$/, ''))
+    .map((post) => {
+      return post.filePath.replace(/\.mdx?$/, '')
+    })
     // Map the path into the static paths object required by Next.js
-    .map((slug) => ({ params: { slug } }));
-
+    .map((slug) => ({ params: { slug: slug.split('/') } }));
+  
   return {
     paths,
     fallback: false,
